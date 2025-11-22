@@ -555,6 +555,11 @@ network_params:
   # Defaults to 10485760 (10MB)
   gossip_max_size: 10485760
 
+  # TODO(rgeraldes24)
+  # Withdrawal address
+  # Default to "Q8943545177806ED17B9F23F0a21ee5948eCaa776" - 0 address of mnemonic
+  withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
+
 
 
 # Global parameters for the network
