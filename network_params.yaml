@@ -2,13 +2,14 @@ participants:
   - el_type: gzond
     el_image: qrledger/go-zond
     cl_type: qrysm
-    cl_image: qrledger/qrysm-beacon
+    cl_image: qrledger/qrysm-beacon-chain
     vc_type: qrysm
     vc_image: qrledger/qrysm-validator
     count: 2
 network_params:
   preset: "mainnet"
-  prefunded_accounts: '{"Q25941dC771bB64514Fc8abBce970307Fb9d477e9": {"balance": "10QRL"}, "Q4107be99052d895e3ee461C685b042Aa975ab5c0": {"balance": "1QRL"}, "Q2099d76d9a34cdd2694c4dc703930a6fbbc1d402": {"balance": "2000000QRL"}, "Q2086ea3853acf31bdeaa7d46f34360e8996d95c5": {"balance": "2000000QRL"}}'
+  # TODO
+  prefunded_accounts: '{"Q25941dC771bB64514Fc8abBce970307Fb9d477e9": {"balance": "10QRL"}'
   light_kdf_enabled: True
   # TODO(rgeraldes24): add withdrawal_address to main network_params
-  withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
+  # withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
