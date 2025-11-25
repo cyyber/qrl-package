@@ -5,11 +5,11 @@ participants:
     cl_image: qrledger/qrysm-beacon-chain
     vc_type: qrysm
     vc_image: qrledger/qrysm-validator
-    count: 2
+    count: 2 
 network_params:
   preset: "mainnet"
   # TODO
-  prefunded_accounts: '{"Q25941dC771bB64514Fc8abBce970307Fb9d477e9": {"balance": "10QRL"}'
-  light_kdf_enabled: True
+  prefunded_accounts: '{"Q25941dC771bB64514Fc8abBce970307Fb9d477e9": {"balance": "10QRL"}}'
+  light_kdf_enabled: True 
   # TODO(rgeraldes24): add withdrawal_address to main network_params
-  # withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
+  withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
