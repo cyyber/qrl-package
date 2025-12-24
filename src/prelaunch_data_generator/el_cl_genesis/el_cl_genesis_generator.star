@@ -100,4 +100,5 @@ def new_env_file_for_el_cl_genesis_data(
         ),
         "PrefundedAccounts": json.encode(network_params.prefunded_accounts),
         "GossipMaxSize": network_params.gossip_max_size,
+        "WithdrawalAddress": network_params.withdrawal_address,
     }

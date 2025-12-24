@@ -90,6 +90,7 @@ network_params:
   additional_preloaded_contracts: {}
   devnet_repo: theqrl
   prefunded_accounts: {}
+  withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
 additional_services: []
 dora_params:
   image: ""

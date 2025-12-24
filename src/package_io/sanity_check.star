@@ -161,6 +161,7 @@ SUBCATEGORY_PARAMS = {
         "devnet_repo",
         "prefunded_accounts",
         "gossip_max_size",
+        "withdrawal_address",
     ],
     "blockscout_params": [
         "image",
