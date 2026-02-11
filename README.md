@@ -468,7 +468,7 @@ network_params:
   preregistered_validator_count: 0
 
   # How long you want the network to wait before starting up
-  genesis_delay: 20
+  genesis_delay: 40
 
   # The gas limit of the network set at genesis
   genesis_gaslimit: 30000000

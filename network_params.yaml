@@ -76,7 +76,7 @@ network_params:
     dawn belong agent sane reefy loyal from judas clean paste rho
     madam poor pay convoy duty circa hybrid circus exempt splash"
   preregistered_validator_count: 0
-  genesis_delay: 20
+  genesis_delay: 40
   genesis_gaslimit: 30000000
   max_per_epoch_activation_churn_limit: 8
   churn_limit_quotient: 65536
