@@ -12,9 +12,6 @@ validator_ranges = import_module(
 )
 
 el_forkmon = import_module("./src/el_forkmon/el_forkmon_launcher.star")
-beacon_metrics_gazer = import_module(
-    "./src/beacon_metrics_gazer/beacon_metrics_gazer_launcher.star"
-)
 dora = import_module("./src/dora/dora_launcher.star")
 dugtrio = import_module("./src/dugtrio/dugtrio_launcher.star")
 blutgang = import_module("./src/blutgang/blutgang_launcher.star")
@@ -446,24 +443,6 @@ def run(plan, args={}):
                 args_with_right_defaults.docker_cache_params,
             )
             plan.print("Successfully launched execution layer forkmon")
-        elif additional_service == "beacon_metrics_gazer":
-            plan.print("Launching beacon metrics gazer")
-            beacon_metrics_gazer_prometheus_metrics_job = (
-                beacon_metrics_gazer.launch_beacon_metrics_gazer(
-                    plan,
-                    all_cl_contexts,
-                    network_params,
-                    global_node_selectors,
-                    args_with_right_defaults.port_publisher,
-                    index,
-                    args_with_right_defaults.docker_cache_params,
-                )
-            )
-            launch_prometheus_grafana = True
-            prometheus_additional_metrics_jobs.append(
-                beacon_metrics_gazer_prometheus_metrics_job
-            )
-            plan.print("Successfully launched beacon metrics gazer")
         elif additional_service == "blockscout":
             plan.print("Launching blockscout")
             blockscout_sc_verif_url = blockscout.launch_blockscout(

@@ -16,7 +16,6 @@ Optional features (enabled via flags or parameter files at runtime):
 
 * Block until the Beacon nodes finalize an epoch (i.e. finalized_epoch > 0)
 * Spin up & configure parameters for the infrastructure behind Flashbot's implementation of PBS using `mev-boost`, in either `full` or `mock` mode. More details [here](./README.md#proposer-builder-separation-pbs-implementation-via-flashbots-mev-boost-protocol).
-* Spin up & connect the network to a [beacon metrics gazer service](https://github.com/dapplion/beacon-metrics-gazer) to collect network-wide participation metrics.
 * Spin up and connect a [JSON RPC Snooper](https://github.com/ethDreamer/json_rpc_snoop) to the network log responses & requests between the EL engine API and the CL client.
 * Specify extra parameters to be passed in for any of the: CL client Beacon, and CL client validator, and/or EL client containers
 * Specify the required parameters for the nodes to reach an external block building network
@@ -570,7 +569,6 @@ network_params:
 # - A transaction spammer is launched to fake transactions sent to the network
 # - Forkmon for EL will be launched
 # - A prometheus will be started, coupled with grafana
-# - A beacon metrics gazer will be launched
 # - A light beacon chain explorer will be launched
 # - Default: []
 additional_services:
@@ -580,7 +578,6 @@ additional_services:
   - tx_spammer
   - el_forkmon
   - blockscout
-  - beacon_metrics_gazer
   - dora
   - full_beaconchain_explorer
   - prometheus_grafana

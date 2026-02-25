@@ -7,7 +7,7 @@ qrl_metrics_exporter_context = import_module(
 HTTP_PORT_ID = "http"
 METRICS_PORT_NUMBER = 9090
 
-DEFAULT_QRL_METRICS_EXPORTER_IMAGE = "qrledger/qrl-metrics-exporter:0.22.0"
+DEFAULT_QRL_METRICS_EXPORTER_IMAGE = "qrledger/qrl-metrics-exporter:0.1.0"
 
 # The min/max CPU/memory that qrl-metrics-exporter can use
 MIN_CPU = 10

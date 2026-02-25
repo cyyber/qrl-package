@@ -5,7 +5,6 @@ mev_type: commit-boost
 # additional_services:
 #   - custom_flood
 #   - el_forkmon
-#   - beacon_metrics_gazer
 #   - dora
 #   - prometheus_grafana
 mev_params:

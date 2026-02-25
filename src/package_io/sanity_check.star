@@ -257,7 +257,6 @@ ADDITIONAL_SERVICES_PARAMS = [
     "custom_flood",
     "el_forkmon",
     "blockscout",
-    "beacon_metrics_gazer",
     "dora",
     "full_beaconchain_explorer",
     "prometheus_grafana",
