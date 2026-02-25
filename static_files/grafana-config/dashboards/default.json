@@ -739,7 +739,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "exemplar": true,
-          "expr": "beacon_participation_prev_epoch_target_attesting_shor_total/beacon_participation_prev_epoch_active_shor_total",
+          "expr": "beacon_prev_epoch_target_shor / clamp_min(beacon_prev_epoch_active_shor, 1)",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -750,7 +750,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "exemplar": true,
-          "expr": "beacon_previous_live_validators / beacon_previous_active_validators",
+          "expr": "beacon_prev_epoch_source_shor / clamp_min(beacon_prev_epoch_active_shor, 1)",
           "hide": false,
           "interval": "",
           "legendFormat": "",
@@ -762,7 +762,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "exemplar": true,
-          "expr": "beacon_previous_correct_validators / beacon_previous_active_validators",
+          "expr": "beacon_prev_epoch_head_shor / clamp_min(beacon_prev_epoch_active_shor, 1)",
           "hide": false,
           "interval": "",
           "legendFormat": "",
@@ -826,7 +826,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "exemplar": true,
-          "expr": "libp2p_peers{}",
+          "expr": "p2p_peer_count{state=\"Connected\"}",
           "interval": "",
           "legendFormat": "{{job}}",
           "refId": "A"
