@@ -22,14 +22,15 @@ network_params:
   prefunded_accounts: '{"QD5812F6cf4a0f645aA620CD57319a0Ed649Dd8f5": {"balance": "2000000QRL"}, "Qa5AEDb928f8300DE98C66bb4BB66b9bB137e9A17": {"balance": "2000000QRL"}}' # tx spammer/clef accounts
   light_kdf_enabled: True
   # withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
-  # genesis_delay: 150 # required if light kdf is disabled!
+  genesis_delay: 70 # required if light kdf is disabled!
+  slots_per_epoch: 3
 
 # global_log_level: debug
 
 additional_services:
   - prometheus_grafana
-#  - full_beaconchain_explorer
-#  - tx_spammer
+  - full_beaconchain_explorer
+  # - tx_spammer
 
 qrl_metrics_exporter_enabled: true
 

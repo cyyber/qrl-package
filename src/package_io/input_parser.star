@@ -1043,7 +1043,7 @@ def get_default_xatu_sentry_params():
 
 def get_default_tx_spammer_params():
     return {
-        "image": "theqrl/qrl-tx-spammer:latest",
+        "image": "qrledger/qrl-tx-spammer:latest",
         "scenario": "eoatx",
         "throughput": 1000,
         "max_pending": 1000,

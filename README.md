@@ -845,7 +845,7 @@ checkpoint_sync_url: ""
 # Transaction spammer params
 tx_spammer_params:
   # The image to use for tx spammer
-  image: theqrl/qrl-tx-spammer:latest
+  image: qrledger/qrl-tx-spammer:latest
   # The scenario to use (see https://github.com/theQRL/qrl-tx-spammer)
   # Valid scenarios are:
   #  eoatx, sqrctx, deploytx, depoy-destruct, gasburnertx

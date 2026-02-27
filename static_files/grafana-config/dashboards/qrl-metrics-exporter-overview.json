@@ -696,7 +696,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "count(qrl_con_node_version{version=~\".*Qrysm.*\"})",
+          "expr": "count(qrl_con_node_version{version=~\".*qrysm.*\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "Qrysm",
@@ -763,20 +763,6 @@
           "legendFormat": "Gzond",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "count(qrl_exe_web3_client_version{version=~\".*reth.*\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Reth",
-          "range": true,
-          "refId": "E"
         }
       ],
       "title": "Execution Clients",
