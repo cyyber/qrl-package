@@ -237,8 +237,9 @@ def launch_full_beacon(
                 "/app/config/beaconchain-config.yml",
                 "-blocks.concurrency",
                 "1",
-                #"-blocks.tracemode",
-                #"gzond",
+                # NOTE(rgeraldes24): "-blocks.tracemode gzond" is not supported at the moment.
+                # "-blocks.tracemode",
+                # "gzond",
                 "-data.concurrency",
                 "1",
                 "-balances.enabled",
