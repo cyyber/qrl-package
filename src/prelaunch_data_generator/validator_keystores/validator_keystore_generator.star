@@ -10,8 +10,6 @@ QRYSM_PASSWORD_FILEPATH_ON_GENERATOR = "/tmp/qrysm-password.txt"
 
 KEYSTORES_GENERATION_TOOL_NAME = "/app/eth2-val-tools"
 
-VAL_TOOLS_IMAGE = "qrledger/qrysm:qrl-genesis-generator-latest"
-
 SUCCESSFUL_EXEC_CMD_EXIT_CODE = 0
 
 QRYSM_DIRNAME = "qrysm"
@@ -32,8 +30,9 @@ def launch_prelaunch_data_generator(
     files_artifact_mountpoints,
     service_name_suffix,
     docker_cache_params,
+    val_tools_image,
 ):
-    config = get_config(files_artifact_mountpoints, docker_cache_params)
+    config = get_config(files_artifact_mountpoints, docker_cache_params, val_tools_image)
 
     service_name = "{0}{1}".format(
         SERVICE_NAME_PREFIX,
@@ -45,9 +44,9 @@ def launch_prelaunch_data_generator(
 
 
 def launch_prelaunch_data_generator_parallel(
-    plan, files_artifact_mountpoints, service_name_suffixes, docker_cache_params
+    plan, files_artifact_mountpoints, service_name_suffixes, docker_cache_params, val_tools_image
 ):
-    config = get_config(files_artifact_mountpoints, docker_cache_params)
+    config = get_config(files_artifact_mountpoints, docker_cache_params, val_tools_image)
     service_names = [
         "{0}{1}".format(
             SERVICE_NAME_PREFIX,
@@ -60,11 +59,11 @@ def launch_prelaunch_data_generator_parallel(
     return service_names
 
 
-def get_config(files_artifact_mountpoints, docker_cache_params):
+def get_config(files_artifact_mountpoints, docker_cache_params, val_tools_image):
     return ServiceConfig(
         image=shared_utils.docker_cache_image_calc(
             docker_cache_params,
-            VAL_TOOLS_IMAGE,
+            val_tools_image,
         ),
         entrypoint=ENTRYPOINT_ARGS,
         files=files_artifact_mountpoints,
@@ -74,9 +73,9 @@ def get_config(files_artifact_mountpoints, docker_cache_params):
 # Generates keystores for the given number of nodes from the given mnemonic, where each keystore contains approximately
 #
 # 	num_keys / num_nodes keys
-def generate_validator_keystores(plan, mnemonic, withdrawal_address, participants, docker_cache_params, light_kdf_enabled):
+def generate_validator_keystores(plan, mnemonic, withdrawal_address, participants, docker_cache_params, light_kdf_enabled, val_tools_image):
     service_name = launch_prelaunch_data_generator(
-        plan, {}, "cl-validator-keystore", docker_cache_params
+        plan, {}, "cl-validator-keystore", docker_cache_params, val_tools_image
     )
 
     write_qrysm_password_file_cmd = [
@@ -206,13 +205,14 @@ def generate_validator_keystores(plan, mnemonic, withdrawal_address, participant
 
 # this is like above but runs things in parallel - for large networks that run on k8s or gigantic dockers
 def generate_validator_keystores_in_parallel(
-    plan, mnemonic, participants, docker_cache_params
+    plan, mnemonic, participants, docker_cache_params, val_tools_image
 ):
     service_names = launch_prelaunch_data_generator_parallel(
         plan,
         {},
         ["cl-validator-keystore-" + str(idx) for idx in range(0, len(participants))],
         docker_cache_params,
+        val_tools_image,
     )
     all_output_dirpaths = []
     all_generation_commands = []

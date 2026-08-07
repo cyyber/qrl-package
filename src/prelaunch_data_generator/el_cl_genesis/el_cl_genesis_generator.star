@@ -1,6 +1,7 @@
 shared_utils = import_module("../../shared_utils/shared_utils.star")
 
 el_cl_genesis_data = import_module("./el_cl_genesis_data.star")
+genesis_constants = import_module("../genesis_constants/genesis_constants.star")
 
 constants = import_module("../../package_io/constants.star")
 
@@ -71,6 +72,9 @@ def new_env_file_for_el_cl_genesis_data(
     shadowfork_file,
     network_params,
 ):
+    prefunded_accounts = default_prefunded_accounts()
+    prefunded_accounts.update(network_params.prefunded_accounts)
+
     return {
         "UnixTimestamp": genesis_unix_timestamp,
         "NetworkId": constants.NETWORK_ID[network_params.network.split("-")[0]]
@@ -99,7 +103,17 @@ def new_env_file_for_el_cl_genesis_data(
         "AdditionalPreloadedContracts": json.encode(
             network_params.additional_preloaded_contracts
         ),
-        "PrefundedAccounts": json.encode(network_params.prefunded_accounts),
+        "PrefundedAccounts": json.encode(prefunded_accounts),
         "GossipMaxSize": network_params.gossip_max_size,
         "WithdrawalAddress": network_params.withdrawal_address,
     }
+
+
+def default_prefunded_accounts():
+    accounts = {}
+    for account in genesis_constants.PRE_FUNDED_ACCOUNTS:
+        accounts[account.address] = {
+            "balance": "10000QRL",
+            "seed": "0x" + account.seed,
+        }
+    return accounts

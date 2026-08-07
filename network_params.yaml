@@ -67,7 +67,7 @@ participants:
 network_params:
   network: kurtosis
   network_id: "3151908"
-  deposit_contract_address: "Q4242424242424242424242424242424242424242"
+  deposit_contract_address: "Q42424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242"
   seconds_per_slot: 60
   slots_per_epoch: 128
   num_validator_keys_per_node: 64
@@ -91,7 +91,7 @@ network_params:
   additional_preloaded_contracts: {}
   devnet_repo: theqrl
   prefunded_accounts: {}
-  withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
+  withdrawal_address: "Q0838a121a6e4dd8a51e7437b152fabbc76a173f077132f2c2ed021c7b0991e70da4dba44e9ec00984a90f28dfb0aabbda1ddc9e98a76ab0acb6644c5e76fbbe8"
 additional_services: []
 dora_params:
   image: ""

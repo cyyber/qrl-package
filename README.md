@@ -449,7 +449,7 @@ network_params:
   network_id: "3151908"
 
   # The address of the staking contract address
-  deposit_contract_address: "Q4242424242424242424242424242424242424242"
+  deposit_contract_address: "Q42424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242"
 
   # Number of seconds per slot on the Beacon chain
   seconds_per_slot: 60
@@ -529,7 +529,7 @@ network_params:
   additional_preloaded_contracts: {}
   # Example:
   # additional_preloaded_contracts: '{
-  #  "Q123463a4B065722E99115D6c222f267d9cABb524":
+  #  "Q11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111":
   #   {
   #     balance: "1QRL",
   #     code: "0x1234",
@@ -546,11 +546,11 @@ network_params:
   # A number of prefunded accounts to be created
   # Defaults to no prefunded accounts
   # Example:
-  # prefunded_accounts: '{"Q25941dC771bB64514Fc8abBce970307Fb9d477e9": {"balance": "10QRL"}}'
-  # 10QRL to the account Q25941dC771bB64514Fc8abBce970307Fb9d477e9
+  # prefunded_accounts: '{"Qa73c065f7018cc0cfff98028d8ef1ff746f5cb425bc8840a4cdc2a6eb717faa121a2e959a6a0dac2d7c38252d70e4541397b0967880f00b9bd0c4c5d0fc46b2d": {"balance": "10QRL"}}'
+  # 10QRL to the account Qa73c065f7018cc0cfff98028d8ef1ff746f5cb425bc8840a4cdc2a6eb717faa121a2e959a6a0dac2d7c38252d70e4541397b0967880f00b9bd0c4c5d0fc46b2d
   # To prefund multiple accounts, separate them with a comma
   #
-  # prefunded_accounts: '{"Q25941dC771bB64514Fc8abBce970307Fb9d477e9": {"balance": "10QRL"}, "Q4107be99052d895e3ee461C685b042Aa975ab5c0": {"balance": "1QRL"}}'
+  # prefunded_accounts: '{"Qa73c065f7018cc0cfff98028d8ef1ff746f5cb425bc8840a4cdc2a6eb717faa121a2e959a6a0dac2d7c38252d70e4541397b0967880f00b9bd0c4c5d0fc46b2d": {"balance": "10QRL"}, "Q9e6c9f4c6c1ce6db822f2ddcf5410d6e42167107051562ce5a50ee4aa72194202c235e9fa51cc51ebf82344c17c630631f2e9880e036b8ed07a659a61d5250bc": {"balance": "1QRL"}}'
   prefunded_accounts: {}
 
   # Maximum size of gossip messages in bytes
@@ -559,8 +559,8 @@ network_params:
   gossip_max_size: 10485760
 
   # Withdrawal address
-  # Default to "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
-  withdrawal_address: "Q8943545177806ED17B9F23F0a21ee5948eCaa776"
+  # Default to "Q0838a121a6e4dd8a51e7437b152fabbc76a173f077132f2c2ed021c7b0991e70da4dba44e9ec00984a90f28dfb0aabbda1ddc9e98a76ab0acb6644c5e76fbbe8"
+  withdrawal_address: "Q0838a121a6e4dd8a51e7437b152fabbc76a173f077132f2c2ed021c7b0991e70da4dba44e9ec00984a90f28dfb0aabbda1ddc9e98a76ab0acb6644c5e76fbbe8"
 
 
 
