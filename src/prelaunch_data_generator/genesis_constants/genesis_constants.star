@@ -2,20 +2,14 @@ def new_prefunded_account(address, seed):
     return struct(address=address, seed=seed)
 
 
-# Pre-funded accounts for the QRL post-quantum execution layer.
+# Pre-funded devnet accounts: fresh ML-DSA-87 keypairs generated with
+# @theqrl/wallet.js v3 (SHAKE-256 address derivation).
 #
-# Each entry is a fresh ML-DSA-87 keypair generated via @theqrl/wallet.js v3.0.x
-# (SHAKE-256 address derivation, the canonical post-migration spec).
+#   address - 64-byte QRL address (Q + 128 hex chars)
+#   seed    - 51-byte ExtendedSeed (descriptor || ML-DSA-87 seed), hex-encoded;
+#             feed to wallet.js / web3.qrl seedToAccount()
 #
-#   address  - 64-byte (Q + 128 hex chars) post-quantum address
-#   seed     - 51-byte ExtendedSeed (descriptor || ML-DSA-87 seed) hex-encoded;
-#              feed this directly into wallet.js seedToAccount() / web3.qrl.accounts.seedToAccount(),
-#              or pass to tx-spammer / staking-deposit-cli once they accept the v3 ExtendedSeed format.
-#
-# These accounts have no production value and are reused across local kurtosis
-# devnets — DO NOT fund them on a real network.
-#
-# Regenerated 2026-05-15 after extending QRL addresses from 48 to 64 bytes.
+# Dev-only keys, publicly known — never fund them on a real network.
 PRE_FUNDED_ACCOUNTS = [
     # account #0
     new_prefunded_account(
