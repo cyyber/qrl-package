@@ -43,6 +43,7 @@ participants:
     use_remote_signer: false
 # Remote signer
     remote_signer_type: clef
+    remote_signer_auto_approve: false
     remote_signer_image: qrledger/go-qrl:alltools-stable
     remote_signer_extra_env_vars: {}
     remote_signer_extra_labels: {}

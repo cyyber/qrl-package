@@ -87,7 +87,7 @@ def get_config(
 ):
     keystore_dirpath = shared_utils.path_join(
         constants.CLEF_KEYSTORE_DIRPATH_ON_SERVICE_CONTAINER,
-        launcher.keystore.clef_relative_dirpath,
+        launcher.clef_files.keystore_relative_dirpath,
     )
 
     cmd = [
@@ -107,8 +107,11 @@ def get_config(
         # this is a repeated<proto type>, we convert it into Starlark
         cmd.extend([param for param in participant.remote_signer_extra_params])
 
+    if participant.remote_signer_auto_approve:
+        cmd = get_auto_approve_cmd(launcher, cmd)
+
     files = {
-        constants.CLEF_KEYSTORE_DIRPATH_ON_SERVICE_CONTAINER: launcher.keystore.file_artifact_uuid,
+        constants.CLEF_KEYSTORE_DIRPATH_ON_SERVICE_CONTAINER: launcher.clef_files.file_artifact_uuid,
     }
 
     public_ports = {}
@@ -157,10 +160,37 @@ def get_config(
 def new_clef_launcher(
     networkid,
     el_type,
-    keystore,
+    clef_files,
 ):
     return struct(
         networkid=networkid,
         el_type=el_type,
-        keystore=keystore,
+        clef_files=clef_files,
     )
+
+
+# Runs clef under the attested ruleset from the keystore artifact. The sh
+# wrapper exists only to pipe the master seed password to stdin — clef has
+# no flag for it.
+def get_auto_approve_cmd(launcher, cmd):
+    configdir = shared_utils.path_join(
+        constants.CLEF_KEYSTORE_DIRPATH_ON_SERVICE_CONTAINER,
+        launcher.clef_files.configdir_relative_dirpath,
+    )
+    rules_filepath = shared_utils.path_join(
+        constants.CLEF_KEYSTORE_DIRPATH_ON_SERVICE_CONTAINER,
+        launcher.clef_files.rules_relative_filepath,
+    )
+
+    clef_cmd = cmd + [
+        "--configdir={0}".format(configdir),
+        "--rules={0}".format(rules_filepath),
+    ]
+    # Every argument is quoted: the command runs under sh, which would
+    # otherwise expand values such as --http.vhosts=*.
+    quoted_clef_cmd_str = " ".join(["'{0}'".format(argument) for argument in clef_cmd])
+
+    supply_masterseed_password_cmd_str = "printf '%s\\n' '{0}'".format(
+        constants.CLEF_PASSWORD
+    )
+    return ["sh", "-c", "{0} | {1}".format(supply_masterseed_password_cmd_str, quoted_clef_cmd_str)]

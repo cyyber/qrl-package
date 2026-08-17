@@ -40,6 +40,7 @@ PARTICIPANT_CATEGORIES = {
         "validator_count",
         "use_remote_signer",
         "remote_signer_type",
+        "remote_signer_auto_approve",
         "remote_signer_image",
         "remote_signer_extra_env_vars",
         "remote_signer_extra_labels",
@@ -121,6 +122,7 @@ PARTICIPANT_MATRIX_PARAMS = {
         ],
         "remote_signer": [
             "remote_signer_type",
+            "remote_signer_auto_approve",
             "remote_signer_image",
             "remote_signer_extra_env_vars",
             "remote_signer_extra_labels",

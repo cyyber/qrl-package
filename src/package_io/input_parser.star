@@ -213,6 +213,7 @@ def input_parser(plan, input_args):
                 vc_extra_labels=participant["vc_extra_labels"],
                 use_remote_signer=participant["use_remote_signer"],
                 remote_signer_type=participant["remote_signer_type"],
+                remote_signer_auto_approve=participant["remote_signer_auto_approve"],
                 remote_signer_image=participant["remote_signer_image"],
                 remote_signer_tolerations=participant["remote_signer_tolerations"],
                 remote_signer_extra_env_vars=participant[
@@ -860,6 +861,7 @@ def default_participant():
         "vc_max_mem": 0,
         "use_remote_signer": None,
         "remote_signer_type": "clef",
+        "remote_signer_auto_approve": False,
         "remote_signer_image": "",
         "remote_signer_extra_env_vars": {},
         "remote_signer_extra_labels": {},

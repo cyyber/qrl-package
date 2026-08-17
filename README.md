@@ -326,6 +326,14 @@ participants:
     # Defaults to clef
     remote_signer_type: "clef"
 
+    # Whether clef approves signing requests for its development account
+    # automatically, without any interactive confirmation. Requests are
+    # approved through an attested ruleset restricted to that account.
+    # Development networks only: anyone who can reach the node can spend
+    # from the clef-managed account when this is enabled.
+    # Defaults to false
+    remote_signer_auto_approve: false
+
     # The Docker image that should be used for the remote signer
     # Defaults to "qrledger/go-qrl:alltools-stable"
     remote_signer_image: "qrledger/go-qrl:alltools-stable"

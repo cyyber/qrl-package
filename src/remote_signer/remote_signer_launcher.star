@@ -12,7 +12,7 @@ def launch(
     full_name,
     vc_type,
     el_type,
-    node_keystore_files,
+    clef_files,
     participant,
     global_tolerations,
     node_selectors,
@@ -28,7 +28,7 @@ def launch(
             "launcher": clef.new_clef_launcher(
                 network_id,
                 el_type,
-                keystore=node_keystore_files,
+                clef_files=clef_files,
             ),
             "launch_method": clef.launch,
         },
