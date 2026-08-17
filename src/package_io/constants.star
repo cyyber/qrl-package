@@ -59,6 +59,10 @@ VALIDATOR_KEYS_DIRPATH_ON_SERVICE_CONTAINER = "/validator-keys"
 
 CLEF_KEYSTORE_DIRPATH_ON_SERVICE_CONTAINER = "/clef-keystore"
 
+# Development password protecting the clef keystore, master seed, and stored
+# credentials on ephemeral networks (>=10 characters required by clef).
+CLEF_PASSWORD = "passwordpassword"
+
 JWT_MOUNTPOINT_ON_CLIENTS = "/jwt"
 JWT_MOUNT_PATH_ON_CONTAINER = JWT_MOUNTPOINT_ON_CLIENTS + "/jwtsecret"
 

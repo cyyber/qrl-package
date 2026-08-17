@@ -2,8 +2,8 @@ shared_utils = import_module("../shared_utils/shared_utils.star")
 validator_keystores = import_module(
     "../prelaunch_data_generator/validator_keystores/validator_keystore_generator.star"
 )
-clef_keystore = import_module(
-    "../prelaunch_data_generator/clef_keystore/clef_keystore_generator.star"
+clef_files_generator = import_module(
+    "../prelaunch_data_generator/clef_files/clef_files_generator.star"
 )
 genesis_constants = import_module(
     "../prelaunch_data_generator/genesis_constants/genesis_constants.star"
@@ -52,13 +52,13 @@ def launch(
     clef_participant = None
     for index, participant in enumerate(args_with_right_defaults.participants):
         if participant.use_remote_signer and participant.remote_signer_type == "clef":
-            plan.print("Generating clef key store")
+            plan.print("Generating the clef files")
             prefunded_account = genesis_constants.PRE_FUNDED_ACCOUNTS[14]
-            clef_data = clef_keystore.generate_clef_keystore(
+            clef_data = clef_files_generator.generate_clef_files(
                 plan,
                 prefunded_account,
-                args_with_right_defaults.participants,
                 args_with_right_defaults.docker_cache_params,
+                auto_approve=participant.remote_signer_auto_approve,
             )
             clef_participant = participant
             break
