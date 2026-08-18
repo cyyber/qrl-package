@@ -50,81 +50,47 @@ def get_config(files_artifact_mountpoints, docker_cache_params):
     )
 
 
-# Generates the clef files artifact: the keystore, and the auto-approval
-# data when requested
+# Generates the clef files artifact: the keystore for every managed account,
+# and the auto-approval data when requested
 def generate_clef_files(
-    plan, prefunded_account, docker_cache_params, auto_approve=False
+    plan, prefunded_accounts, docker_cache_params, auto_approve=False
 ):
     service_name = launch_prelaunch_data_generator(
         plan, {}, "el-clef", docker_cache_params
     )
 
-    # Clef key password file
-    write_clef_key_password_file_cmd = [
-        "sh",
-        "-c",
-        "echo '{0}' > {1}".format(
-            CLEF_KEY_PASSWORD,
-            CLEF_KEY_PASSWORD_FILEPATH_ON_GENERATOR,
-        ),
-    ]
-    write_clef_key_password_file_cmd_result = plan.exec(
-        service_name=service_name,
-        description="Storing clef key password in a file",
-        recipe=ExecRecipe(command=write_clef_key_password_file_cmd),
-    )
-    plan.verify(
-        write_clef_key_password_file_cmd_result["code"],
-        "==",
-        SUCCESSFUL_EXEC_CMD_EXIT_CODE,
-    )
-
-    clef_key_password_artifact_name = plan.store_service_files(
-        service_name, CLEF_KEY_PASSWORD_FILEPATH_ON_GENERATOR, name="clef-key-password"
-    )
-
-    # Clef key seed file
-    write_clef_key_seed_file_cmd = [
-        "sh",
-        "-c",
-        "echo '{0}' > {1}".format(
-            prefunded_account.seed,
-            CLEF_KEY_SEED_FILEPATH_ON_GENERATOR,
-        ),
-    ]
-    write_clef_key_seed_file_cmd_result = plan.exec(
-        service_name=service_name,
-        description="Storing clef key seed in a file",
-        recipe=ExecRecipe(command=write_clef_key_seed_file_cmd),
-    )
-    plan.verify(
-        write_clef_key_seed_file_cmd_result["code"],
-        "==",
-        SUCCESSFUL_EXEC_CMD_EXIT_CODE,
-    )
-
-    clef_key_seed_artifact_name = plan.store_service_files(
-        service_name, CLEF_KEY_SEED_FILEPATH_ON_GENERATOR, name="clef-key-seed"
-    )
-
     output_dirpath = CLEF_KEYSTORE_OUTPUT_DIRPATH
+    keystore_dirpath = shared_utils.path_join(output_dirpath, "keystore")
 
-    import_clef_key_cmd = '{0} --suppress-bootwarn --keystore={1} importraw --password={2} {3} '.format(
-        "clef",
-        shared_utils.path_join(output_dirpath, "keystore"),
-        CLEF_KEY_PASSWORD_FILEPATH_ON_GENERATOR,
-        CLEF_KEY_SEED_FILEPATH_ON_GENERATOR,
-    )
+    import_commands = [
+        "set -e",
+        "echo '{0}' > {1}".format(
+            CLEF_KEY_PASSWORD, CLEF_KEY_PASSWORD_FILEPATH_ON_GENERATOR
+        ),
+    ]
+    for account in prefunded_accounts:
+        import_commands.append(
+            "echo '{0}' > {1}".format(
+                account.seed, CLEF_KEY_SEED_FILEPATH_ON_GENERATOR
+            )
+        )
+        import_commands.append(
+            "clef --suppress-bootwarn --keystore={0} importraw --password={1} {2}".format(
+                keystore_dirpath,
+                CLEF_KEY_PASSWORD_FILEPATH_ON_GENERATOR,
+                CLEF_KEY_SEED_FILEPATH_ON_GENERATOR,
+            )
+        )
 
     command_result = plan.exec(
         service_name=service_name,
         description="Generating keystore",
-        recipe=ExecRecipe(command=["sh", "-c", import_clef_key_cmd]),
+        recipe=ExecRecipe(command=["sh", "-c", "\n".join(import_commands)]),
     )
     plan.verify(command_result["code"], "==", SUCCESSFUL_EXEC_CMD_EXIT_CODE)
 
     if auto_approve:
-        prepare_auto_approval(plan, service_name, prefunded_account, output_dirpath)
+        prepare_auto_approval(plan, service_name, prefunded_accounts, output_dirpath)
 
     # Store output into file artifact
     artifact_name = plan.store_service_files(
@@ -142,19 +108,25 @@ def generate_clef_files(
     return clef_files
 
 
-# Prepares everything clef needs to sign for the development account without
+# Prepares everything clef needs to sign for the development accounts without
 # human interaction: a master seed, an attested ruleset that approves requests
-# for that account only, and the stored keystore credential. All interactive
+# for those accounts only, and the stored keystore credentials. All interactive
 # prompts happen here, at generation time, where a failure is loud.
-def prepare_auto_approval(plan, service_name, prefunded_account, output_dirpath):
+def prepare_auto_approval(plan, service_name, prefunded_accounts, output_dirpath):
     configdir = shared_utils.path_join(output_dirpath, "configdir")
     rules_filepath = shared_utils.path_join(output_dirpath, "rules.js")
 
     rules_js = "\n".join(
-        [
+        ["var approvedSenders = ["]
+        + [
+            '    "{0}",'.format(account.address.lower())
+            for account in prefunded_accounts
+        ]
+        + [
+            "];",
+            "",
             "function ApproveTx(request) {",
-            '    if (request.transaction.from.toLowerCase() == "%s") {'
-            % prefunded_account.address.lower(),
+            "    if (approvedSenders.indexOf(request.transaction.from.toLowerCase()) >= 0) {",
             '        return "Approve"',
             "    }",
             '    return "Reject"',
@@ -177,14 +149,16 @@ cat > {rules_filepath} <<'RULES'
 {rules_js}
 RULES
 printf '%s\\n' '{password}' | clef --configdir={configdir} --suppress-bootwarn attest $(sha256sum {rules_filepath} | cut -d ' ' -f 1)
-printf '%s\\n%s\\n%s\\n' '{password}' '{password}' '{password}' | clef --configdir={configdir} --keystore={keystore_dirpath} --suppress-bootwarn setpw {address}
+for address in {addresses}; do
+	printf '%s\\n%s\\n%s\\n' '{password}' '{password}' '{password}' | clef --configdir={configdir} --keystore={keystore_dirpath} --suppress-bootwarn setpw "$address"
+done
 """.format(
         password=constants.CLEF_PASSWORD,
         configdir=configdir,
         rules_filepath=rules_filepath,
         rules_js=rules_js,
         keystore_dirpath=shared_utils.path_join(output_dirpath, "keystore"),
-        address=prefunded_account.address,
+        addresses=" ".join([account.address for account in prefunded_accounts]),
     )
 
     command_result = plan.exec(
