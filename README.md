@@ -326,11 +326,11 @@ participants:
     # Defaults to clef
     remote_signer_type: "clef"
 
-    # Whether clef approves signing requests for its development account
+    # Whether clef approves signing requests for its development accounts
     # automatically, without any interactive confirmation. Requests are
     # approved through an attested ruleset restricted to that account.
     # Development networks only: anyone who can reach the node can spend
-    # from the clef-managed account when this is enabled.
+    # from the clef-managed accounts when this is enabled.
     # Defaults to false
     remote_signer_auto_approve: false
 
