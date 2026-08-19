@@ -74,7 +74,7 @@ def generate_clef_files(
             )
         )
         import_commands.append(
-            "clef --suppress-bootwarn --keystore={0} importraw --password={1} {2}".format(
+            "clef importraw --suppress-bootwarn --keystore={0} --password={1} {2}".format(
                 keystore_dirpath,
                 CLEF_KEY_PASSWORD_FILEPATH_ON_GENERATOR,
                 CLEF_KEY_SEED_FILEPATH_ON_GENERATOR,
