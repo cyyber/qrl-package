@@ -113,7 +113,7 @@ def default_prefunded_accounts():
     accounts = {}
     for account in genesis_constants.PRE_FUNDED_ACCOUNTS:
         accounts[account.address] = {
-            "balance": "10000QRL",
+            "balance": "1000000000QRL",
             "seed": "0x" + account.seed,
         }
     return accounts
