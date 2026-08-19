@@ -9,8 +9,6 @@ CLEF_KEY_PASSWORD = constants.CLEF_PASSWORD
 CLEF_KEY_PASSWORD_FILEPATH_ON_GENERATOR = "/tmp/clef-key-password.txt"
 CLEF_KEY_SEED_FILEPATH_ON_GENERATOR = "/tmp/clef-key-seed.txt"
 
-GQRL_TOOLS_IMAGE = "qrledger/go-qrl:alltools-stable"
-
 SUCCESSFUL_EXEC_CMD_EXIT_CODE = 0
 
 SERVICE_NAME_PREFIX = "clef-files-generation-"
@@ -27,8 +25,9 @@ def launch_prelaunch_data_generator(
     files_artifact_mountpoints,
     service_name_suffix,
     docker_cache_params,
+    image,
 ):
-    config = get_config(files_artifact_mountpoints, docker_cache_params)
+    config = get_config(files_artifact_mountpoints, docker_cache_params, image)
 
     service_name = "{0}{1}".format(
         SERVICE_NAME_PREFIX,
@@ -39,11 +38,11 @@ def launch_prelaunch_data_generator(
     return service_name
 
 
-def get_config(files_artifact_mountpoints, docker_cache_params):
+def get_config(files_artifact_mountpoints, docker_cache_params, image):
     return ServiceConfig(
         image=shared_utils.docker_cache_image_calc(
             docker_cache_params,
-            GQRL_TOOLS_IMAGE,
+            image,
         ),
         entrypoint=ENTRYPOINT_ARGS,
         files=files_artifact_mountpoints,
@@ -53,10 +52,10 @@ def get_config(files_artifact_mountpoints, docker_cache_params):
 # Generates the clef files artifact: the keystore for every managed account,
 # and the auto-approval data when requested
 def generate_clef_files(
-    plan, prefunded_accounts, docker_cache_params, auto_approve=False
+    plan, prefunded_accounts, docker_cache_params, image, auto_approve=False
 ):
     service_name = launch_prelaunch_data_generator(
-        plan, {}, "el-clef", docker_cache_params
+        plan, {}, "el-clef", docker_cache_params, image
     )
 
     output_dirpath = CLEF_KEYSTORE_OUTPUT_DIRPATH

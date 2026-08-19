@@ -60,6 +60,7 @@ def launch(
                 plan,
                 prefunded_accounts,
                 args_with_right_defaults.docker_cache_params,
+                participant.remote_signer_image,
                 auto_approve=participant.remote_signer_auto_approve,
             )
             clef_participant = participant
