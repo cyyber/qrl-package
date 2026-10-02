@@ -244,7 +244,7 @@ def get_config(
         # this is a repeated<proto type>, we convert it into Starlark
         cmd.extend([param for param in participant.el_extra_params])
 
-    cmd_str = " ".join(cmd)
+    cmd_str = "exec " + " ".join(cmd)
     if launcher.network not in constants.PUBLIC_NETWORKS:
         subcommand_strs = [
             init_datadir_cmd_str,
