@@ -213,6 +213,7 @@ def input_parser(plan, input_args):
                 vc_extra_labels=participant["vc_extra_labels"],
                 use_remote_signer=participant["use_remote_signer"],
                 remote_signer_type=participant["remote_signer_type"],
+                remote_signer_auto_approve=participant["remote_signer_auto_approve"],
                 remote_signer_image=participant["remote_signer_image"],
                 remote_signer_tolerations=participant["remote_signer_tolerations"],
                 remote_signer_extra_env_vars=participant[
@@ -271,6 +272,9 @@ def input_parser(plan, input_args):
             ],
             seconds_per_slot=result["network_params"]["seconds_per_slot"],
             slots_per_epoch=result["network_params"]["slots_per_epoch"],
+            epochs_per_execution_voting_period=result["network_params"][
+                "epochs_per_execution_voting_period"
+            ],
             genesis_delay=result["network_params"]["genesis_delay"],
             genesis_gaslimit=result["network_params"]["genesis_gaslimit"],
             light_kdf_enabled=result["network_params"]["light_kdf_enabled"],
@@ -631,6 +635,20 @@ def parse_network_params(plan, input_args):
     if result["network_params"]["slots_per_epoch"] == 0:
         fail("slots_per_epoch is 0 needs to be > 0 ")
 
+    # Mainnet-built Qrysm compiles execution_data_votes as List[T, 512].
+    # Native hashing uses the runtime product, so derive the period from slots.
+    if result["network_params"]["preset"] == "mainnet":
+        slots_per_epoch = result["network_params"]["slots_per_epoch"]
+        if 512 % slots_per_epoch != 0:
+            fail(
+                "slots_per_epoch ({0}) must divide 512 so a mainnet Qrysm binary's execution_data_votes list matches".format(
+                    slots_per_epoch,
+                )
+            )
+        result["network_params"]["epochs_per_execution_voting_period"] = (
+            512 // slots_per_epoch
+        )
+
     if (
         result["network_params"]["network"] == constants.NETWORK_NAME.kurtosis
         or constants.NETWORK_NAME.shadowfork in result["network_params"]["network"]
@@ -759,9 +777,11 @@ def default_network_params():
     return {
         "network": "kurtosis",
         "network_id": "3151908",
-        "deposit_contract_address": "Q4242424242424242424242424242424242424242",
+        "deposit_contract_address": "Q42424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242",
         "seconds_per_slot": 60,
         "slots_per_epoch": 128,
+        # Overwritten for mainnet as 512 / slots_per_epoch.
+        "epochs_per_execution_voting_period": 4,
         "num_validator_keys_per_node": 64,
         "preregistered_validator_keys_mnemonic": constants.DEFAULT_MNEMONIC,
         "preregistered_validator_count": 0,
@@ -783,7 +803,7 @@ def default_network_params():
         "devnet_repo": "ethpandaops",
         "prefunded_accounts": {},
         "gossip_max_size": 10485760,
-        "withdrawal_address": "Q8943545177806ED17B9F23F0a21ee5948eCaa776",
+        "withdrawal_address": "Q0838a121a6e4dd8a51e7437b152fabbc76a173f077132f2c2ed021c7b0991e70da4dba44e9ec00984a90f28dfb0aabbda1ddc9e98a76ab0acb6644c5e76fbbe8",
     }
 
 
@@ -791,9 +811,10 @@ def default_minimal_network_params():
     return {
         "network": "kurtosis",
         "network_id": "3151908",
-        "deposit_contract_address": "Q4242424242424242424242424242424242424242",
+        "deposit_contract_address": "Q42424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242",
         "seconds_per_slot": 15,
         "slots_per_epoch": 60,
+        "epochs_per_execution_voting_period": 4,
         "num_validator_keys_per_node": 64,
         "preregistered_validator_keys_mnemonic": constants.DEFAULT_MNEMONIC,
         "preregistered_validator_count": 0,
@@ -815,7 +836,7 @@ def default_minimal_network_params():
         "devnet_repo": "ethpandaops",
         "prefunded_accounts": {},
         "gossip_max_size": 10485760,
-        "withdrawal_address": "Q8943545177806ED17B9F23F0a21ee5948eCaa776",
+        "withdrawal_address": "Q0838a121a6e4dd8a51e7437b152fabbc76a173f077132f2c2ed021c7b0991e70da4dba44e9ec00984a90f28dfb0aabbda1ddc9e98a76ab0acb6644c5e76fbbe8",
     }
 
 
@@ -860,6 +881,7 @@ def default_participant():
         "vc_max_mem": 0,
         "use_remote_signer": None,
         "remote_signer_type": "clef",
+        "remote_signer_auto_approve": False,
         "remote_signer_image": "",
         "remote_signer_extra_env_vars": {},
         "remote_signer_extra_labels": {},

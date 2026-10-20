@@ -2,8 +2,8 @@ shared_utils = import_module("../shared_utils/shared_utils.star")
 validator_keystores = import_module(
     "../prelaunch_data_generator/validator_keystores/validator_keystore_generator.star"
 )
-clef_keystore = import_module(
-    "../prelaunch_data_generator/clef_keystore/clef_keystore_generator.star"
+clef_files_generator = import_module(
+    "../prelaunch_data_generator/clef_files/clef_files_generator.star"
 )
 genesis_constants = import_module(
     "../prelaunch_data_generator/genesis_constants/genesis_constants.star"
@@ -37,6 +37,7 @@ def launch(
             args_with_right_defaults.participants,
             args_with_right_defaults.docker_cache_params,
             network_params.light_kdf_enabled,
+            args_with_right_defaults.qrl_genesis_generator_params.image,
         )
     else:
         validator_data = validator_keystores.generate_validator_keystores_in_parallel(
@@ -44,19 +45,23 @@ def launch(
             network_params.preregistered_validator_keys_mnemonic,
             args_with_right_defaults.participants,
             args_with_right_defaults.docker_cache_params,
+            args_with_right_defaults.qrl_genesis_generator_params.image,
         )
 
     clef_data = None
     clef_participant = None
     for index, participant in enumerate(args_with_right_defaults.participants):
         if participant.use_remote_signer and participant.remote_signer_type == "clef":
-            plan.print("Generating clef key store")
-            prefunded_account = genesis_constants.PRE_FUNDED_ACCOUNTS[14]
-            clef_data = clef_keystore.generate_clef_keystore(
+            plan.print("Generating the clef files")
+            # A pool of development accounts, so concurrent suites can
+            # transact without contending for one account's nonces.
+            prefunded_accounts = genesis_constants.PRE_FUNDED_ACCOUNTS[12:22]
+            clef_data = clef_files_generator.generate_clef_files(
                 plan,
-                prefunded_account,
-                args_with_right_defaults.participants,
+                prefunded_accounts,
                 args_with_right_defaults.docker_cache_params,
+                participant.remote_signer_image,
+                auto_approve=participant.remote_signer_auto_approve,
             )
             clef_participant = participant
             break

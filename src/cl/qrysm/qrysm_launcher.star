@@ -209,7 +209,7 @@ def get_beacon_config(
         "--p2p-tcp-port={0}".format(discovery_port),
         "--p2p-udp-port={0}".format(discovery_port_udp),
         # "--p2p-quic-port={0}".format(discovery_port_quic) # TODO: Uncomment this when we have a stable release with this flag
-        "--min-sync-peers={0}".format(MIN_PEERS),
+        "--min-sync-peers={0}".format(0 if not bootnode_contexts else MIN_PEERS),
         "--verbosity=" + log_level,
         "--slots-per-archive-point={0}".format(32 if constants.ARCHIVE_MODE else 8192),
         "--suggested-fee-recipient=" + constants.VALIDATING_REWARDS_ACCOUNT,
@@ -251,7 +251,6 @@ def get_beacon_config(
             + constants.GENESIS_CONFIG_MOUNT_PATH_ON_CONTAINER
             + "/genesis.ssz",
         )
-        cmd.append("--contract-deployment-block=0")
         if (
             launcher.network == constants.NETWORK_NAME.kurtosis
             or constants.NETWORK_NAME.shadowfork in launcher.network
