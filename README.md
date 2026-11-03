@@ -1029,6 +1029,13 @@ QRL's ML-DSA-87 validator keys with the Web3Signer API. The validator client get
   ```
 
 - **Validator client image.** It needs qrysm's `--validators-external-signer-*` flags, which no qrysm release has yet.
+- **Remote keys.** With `keymanager_enabled: true`, the validator client serves the keymanager API on port 5056 (port
+  ID `http-validator`), with the remote keys endpoints (`/qrl/v1/remotekeys`), which add keys to and remove them from
+  `/remote-signer/keys.txt`; this needs a qrysm whose validator client serves them. qrysm keeps the API's token in
+  `auth-token` in its wallet directory, which in remote mode is the default one,
+  `/root/.qrlvalidators/qrysm-wallet/auth-token`.
+- **Exits.** The signer refuses `VOLUNTARY_EXIT` requests unless it runs with `--voluntary-exit-signing-enabled`, a
+  consensus flag: `remote_signer_extra_params: ["--voluntary-exit-signing-enabled"]`.
 - **Logging.** The signer logs at the participant's `vc_log_level`, else at `global_log_level` (`--logging`).
 - **RANDAO.** With fewer than 4 x `slots_per_epoch` validators in the network, the package turns off the signer's
   RANDAO new-layer rate limit (`--randao-new-layer-refill-epochs=0`), which honest proposals would otherwise hit.

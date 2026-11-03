@@ -98,11 +98,13 @@ def get_config(
             constants.REMOTE_SIGNER_MOUNTPOINT_ON_CLIENTS
         ] = remote_signer_context.vc_files_artifact_uuid
 
+    # qrysm serves the keymanager API on its gRPC gateway. It has no token
+    # file flag: it reads the API's token from <wallet-dir>/auth-token and
+    # writes a new one there when the file is missing
     keymanager_api_cmd = [
         "--rpc",
-        "--http-port={0}".format(vc_shared.VALIDATOR_HTTP_PORT_NUM),
-        "--http-host=0.0.0.0",
-        "--keymanager-token-file=" + constants.KEYMANAGER_MOUNT_PATH_ON_CONTAINER,
+        "--grpc-gateway-port={0}".format(vc_shared.VALIDATOR_HTTP_PORT_NUM),
+        "--grpc-gateway-host=0.0.0.0",
     ]
 
     if cl_context.client_name != constants.CL_TYPE.qrysm:
@@ -131,7 +133,6 @@ def get_config(
     ports.update(vc_shared.VALIDATOR_CLIENT_USED_PORTS)
 
     if keymanager_enabled:
-        files[constants.KEYMANAGER_MOUNT_PATH_ON_CLIENTS] = keymanager_file
         cmd.extend(keymanager_api_cmd)
         ports.update(vc_shared.VALIDATOR_KEYMANAGER_USED_PORTS)
         public_ports.update(
