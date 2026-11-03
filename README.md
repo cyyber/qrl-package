@@ -441,6 +441,7 @@ participants:
 
     # Participant flag for keymanager api
     # This will open up http ports to your validator services!
+    # See the global keymanager_enabled for where the qrysm validator client serves the API and keeps its token
     # Defaults null and then set to default global keymanager_enabled (false)
     keymanager_enabled: null
 
@@ -857,6 +858,9 @@ global_node_selectors: {}
 
 # Global parameters for keymanager api
 # This will open up http ports to your validator services!
+# The qrysm validator client serves the API through its gRPC gateway on port 5056 (port ID http-validator). Its bearer
+# token is the auth-token file qrysm writes to its wallet directory: /validator-keys/qrysm/auth-token with local
+# keystores, /root/.qrlvalidators/qrysm-wallet/auth-token with go-remotesigner
 # Defaults to false
 keymanager_enabled: false
 

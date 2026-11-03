@@ -2,7 +2,8 @@
 # are local builds: go-remotesigner's consensus image (see "Remote signing for
 # validator clients" in README.md) and qrysm beacon-chain and validator images
 # whose validator has the --validators-external-signer-* flags, which no qrysm
-# release has yet.
+# release has yet. keymanager_enabled starts the validator client's keymanager
+# API on port 5056.
 participants:
   - el_type: gqrl
     cl_type: qrysm
@@ -12,6 +13,7 @@ participants:
     use_remote_signer: true
     remote_signer_type: go-remotesigner
     remote_signer_image: local/go-remotesigner:devnet
+    keymanager_enabled: true
 network_params:
   light_kdf_enabled: true
   slots_per_epoch: 8
