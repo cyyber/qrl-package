@@ -11,7 +11,6 @@ shared_utils = import_module("../shared_utils/shared_utils.star")
 def launch(
     plan,
     launcher,
-    keymanager_file,
     service_name,
     vc_type,
     image,
@@ -55,7 +54,6 @@ def launch(
         config = qrysm.get_config(
             participant=participant,
             el_cl_genesis_data=launcher.el_cl_genesis_data,
-            keymanager_file=keymanager_file,
             image=image,
             beacon_http_url=beacon_http_url,
             cl_context=cl_context,

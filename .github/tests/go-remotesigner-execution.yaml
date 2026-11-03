@@ -1,0 +1,16 @@
+# gqrl's JSON-RPC behind go-remotesigner's execution mode, which holds four
+# prefunded development accounts. The signer image is a local build of its
+# full flavour, the one with execution mode (see "Remote signing for execution
+# clients" in README.md); the validator client keeps its keystores.
+participants:
+  - el_type: gqrl
+    cl_type: qrysm
+    validator_count: 64
+    use_remote_signer: true
+    remote_signer_type: go-remotesigner-execution
+    remote_signer_image: local/go-remotesigner:devnet-full
+network_params:
+  light_kdf_enabled: true
+  slots_per_epoch: 8
+additional_services:
+  - prometheus_grafana

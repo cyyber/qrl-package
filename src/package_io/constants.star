@@ -11,8 +11,9 @@ VC_TYPE = struct(
 )
 
 REMOTE_SIGNER_TYPE = struct(
-    web3signer="web3signer",
     clef="clef",
+    go_remotesigner="go-remotesigner",
+    go_remotesigner_execution="go-remotesigner-execution",
 )
 
 GLOBAL_LOG_LEVEL = struct(
@@ -59,17 +60,20 @@ VALIDATOR_KEYS_DIRPATH_ON_SERVICE_CONTAINER = "/validator-keys"
 
 CLEF_KEYSTORE_DIRPATH_ON_SERVICE_CONTAINER = "/clef-keystore"
 
+# Where a validator client and its go-remotesigner find the files they share:
+# the validator client's public keys (one per line), the sign token, and the
+# CA that issued the signer's TLS certificate
+REMOTE_SIGNER_MOUNTPOINT_ON_CLIENTS = "/remote-signer"
+REMOTE_SIGNER_KEY_FILENAME = "keys.txt"
+REMOTE_SIGNER_AUTH_TOKEN_FILENAME = "auth-token"
+REMOTE_SIGNER_TLS_CA_FILENAME = "ca.pem"
+
 # Development password protecting the clef keystore, master seed, and stored
 # credentials on ephemeral networks (>=10 characters required by clef).
 CLEF_PASSWORD = "passwordpassword"
 
 JWT_MOUNTPOINT_ON_CLIENTS = "/jwt"
 JWT_MOUNT_PATH_ON_CONTAINER = JWT_MOUNTPOINT_ON_CLIENTS + "/jwtsecret"
-
-KEYMANAGER_MOUNT_PATH_ON_CLIENTS = "/keymanager"
-KEYMANAGER_MOUNT_PATH_ON_CONTAINER = (
-    KEYMANAGER_MOUNT_PATH_ON_CLIENTS + "/keymanager.txt"
-)
 
 MOCK_MEV_TYPE = "mock"
 FLASHBOTS_MEV_TYPE = "flashbots"

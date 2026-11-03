@@ -26,9 +26,10 @@ DEFAULT_VC_IMAGES_MINIMAL = {
     "qrysm": "qrledger/qrysm:validator-develop-minimal",
 }
 
+# go-remotesigner has no published image yet, so it has no default:
+# remote_signer_image names one built from its repository
 DEFAULT_REMOTE_SIGNER_IMAGES = {
     "clef": "qrledger/go-qrl:alltools-stable",
-    "web3signer": "consensys/web3signer:latest",
 }
 
 # MEV Params
@@ -538,6 +539,47 @@ def parse_network_params(plan, input_args):
         if participant["use_remote_signer"] and not participant["use_separate_vc"]:
             fail("`use_remote_signer` requires `use_separate_vc`")
 
+        if (
+            participant["use_remote_signer"]
+            and remote_signer_type
+            == constants.REMOTE_SIGNER_TYPE.go_remotesigner_execution
+        ):
+            # go-remotesigner's execution mode holds accounts the kurtosis
+            # network and shadowforks prefund at genesis, and fronts a gqrl
+            if el_type != constants.EL_TYPE.gqrl:
+                fail(
+                    "`remote_signer_type: go-remotesigner-execution` fronts a gqrl, not {0}".format(
+                        el_type
+                    )
+                )
+            network = result["network_params"]["network"]
+            if (
+                network != constants.NETWORK_NAME.kurtosis
+                and constants.NETWORK_NAME.shadowfork not in network
+            ):
+                fail(
+                    "`remote_signer_type: go-remotesigner-execution` holds development accounts that only the kurtosis network and shadowforks prefund"
+                )
+
+        if (
+            participant["use_remote_signer"]
+            and remote_signer_type == constants.REMOTE_SIGNER_TYPE.go_remotesigner
+        ):
+            # go-remotesigner loads the deposit CLI keystores the package
+            # generates for the validator client, and the genesis state
+            if result["parallel_keystore_generation"]:
+                fail(
+                    "`remote_signer_type: go-remotesigner` loads the deposit CLI keystores, which `parallel_keystore_generation` does not generate"
+                )
+            network = result["network_params"]["network"]
+            if (
+                network != constants.NETWORK_NAME.kurtosis
+                and constants.NETWORK_NAME.shadowfork not in network
+            ):
+                fail(
+                    "`remote_signer_type: go-remotesigner` needs the validator keystores the package generates, which only the kurtosis network and shadowforks have"
+                )
+
         if vc_type == "":
             # Defaults to matching the chosen CL client
             vc_type = cl_type
@@ -568,6 +610,23 @@ def parse_network_params(plan, input_args):
         if remote_signer_image == "":
             participant["remote_signer_image"] = DEFAULT_REMOTE_SIGNER_IMAGES.get(
                 remote_signer_type, ""
+            )
+        if (
+            participant["use_remote_signer"]
+            and remote_signer_type == constants.REMOTE_SIGNER_TYPE.go_remotesigner
+            and participant["remote_signer_image"] == ""
+        ):
+            fail(
+                "`remote_signer_type: go-remotesigner` has no default image: set `remote_signer_image` to a go-remotesigner consensus image, for example one built from https://github.com/rgeraldes24/go-remotesigner (branch m/v1.1-prep until its stack merges to main) with `make image FLAVOUR=remotesigner-consensus IMAGE=local/go-remotesigner:devnet`, which needs Go, go-licenses v2.0.1 (or GO_LICENSES) and docker buildx, see its docs/operations/deploy-docker.md"
+            )
+        if (
+            participant["use_remote_signer"]
+            and remote_signer_type
+            == constants.REMOTE_SIGNER_TYPE.go_remotesigner_execution
+            and participant["remote_signer_image"] == ""
+        ):
+            fail(
+                "`remote_signer_type: go-remotesigner-execution` has no default image: set `remote_signer_image` to a go-remotesigner image of the full flavour, which has execution mode, for example one built from https://github.com/rgeraldes24/go-remotesigner (branch m/v1.1-prep until its stack merges to main) with `make image FLAVOUR=remotesigner IMAGE=local/go-remotesigner:devnet-full`, which needs Go, go-licenses v2.0.1 (or GO_LICENSES) and docker buildx, see its docs/operations/deploy-docker.md"
             )
 
         snooper_enabled = participant["snooper_enabled"]
