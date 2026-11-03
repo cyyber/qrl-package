@@ -14,7 +14,6 @@ def launch(
     network_params,
     el_cl_data,
     jwt_file,
-    keymanager_file,
     args_with_right_defaults,
     all_el_contexts,
     global_node_selectors,

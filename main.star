@@ -109,10 +109,6 @@ def run(plan, args={}):
         src=static_files.JWT_PATH_FILEPATH,
         name="jwt_file",
     )
-    keymanager_file = plan.upload_files(
-        src=static_files.KEYMANAGER_PATH_FILEPATH,
-        name="keymanager_file",
-    )
 
     plan.print("Read the prometheus, grafana templates")
 
@@ -158,7 +154,6 @@ def run(plan, args={}):
         args_with_right_defaults,
         network_params,
         jwt_file,
-        keymanager_file,
         persistent,
         xatu_sentry_params,
         global_tolerations,

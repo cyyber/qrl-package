@@ -33,7 +33,6 @@ def launch_participant_network(
     args_with_right_defaults,
     network_params,
     jwt_file,
-    keymanager_file,
     persistent,
     xatu_sentry_params,
     global_tolerations,
@@ -185,7 +184,6 @@ def launch_participant_network(
         network_params,
         el_cl_data,
         jwt_file,
-        keymanager_file,
         args_with_right_defaults,
         all_el_contexts,
         global_node_selectors,
@@ -344,7 +342,14 @@ def launch_participant_network(
             )
         )
 
-        if participant.use_remote_signer and participant.remote_signer_type == "qrysm":
+        # clef signs for the execution clients and was launched once, above;
+        # the other remote signers sign for this participant's validator client,
+        # with its keystores
+        if (
+            participant.use_remote_signer
+            and remote_signer_type != constants.REMOTE_SIGNER_TYPE.clef
+            and vc_keystores != None
+        ):
             remote_signer_context = remote_signer.launch(
                 plan=plan,
                 service_name="signer-{0}".format(full_name),
@@ -353,7 +358,7 @@ def launch_participant_network(
                 full_name="{0}-remote_signer".format(full_name),
                 vc_type=vc_type,
                 el_type=el_type,
-                node_keystore_files=vc_keystores,
+                clef_files=None,
                 participant=participant,
                 global_tolerations=global_tolerations,
                 node_selectors=node_selectors,
@@ -361,6 +366,15 @@ def launch_participant_network(
                 remote_signer_index=current_vc_index,
                 network_id=network_id,
                 global_log_level=args_with_right_defaults.global_log_level,
+                el_cl_genesis_data=el_cl_data,
+                node_keystore_files=vc_keystores,
+                qrysm_password_artifact_uuid=qrysm_password_artifact_uuid,
+                qrysm_password_relative_filepath=qrysm_password_relative_filepath,
+                # go-remotesigner runs only on the kurtosis network and
+                # shadowforks, whose launch returned this image
+                generator_image=qrl_genesis_generator_image,
+                network_validator_count=total_number_of_validator_keys,
+                slots_per_epoch=network_params.slots_per_epoch,
             )
 
         all_remote_signer_contexts.append(remote_signer_context)
@@ -370,7 +384,6 @@ def launch_participant_network(
         vc_context = vc.launch(
             plan=plan,
             launcher=vc.new_vc_launcher(el_cl_genesis_data=el_cl_data),
-            keymanager_file=keymanager_file,
             service_name="vc-{0}".format(full_name),
             vc_type=vc_type,
             image=participant.vc_image,

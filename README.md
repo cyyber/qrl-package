@@ -317,12 +317,21 @@ participants:
     validator_count: null
 
     # Whether to use a remote signer instead of the vc directly handling keys
+    # Requires use_separate_vc
     # Defaults to false
     use_remote_signer: false
 
   # Remote signer Specific flags
     # The type of remote signer that should be used
-    # Valid values are web3signer, clef
+    # Valid values are clef, go-remotesigner
+    # - clef holds development accounts for the EL clients; one clef runs for the
+    #   first participant that uses it
+    # - go-remotesigner signs every duty of this participant's validator client,
+    #   which then holds no keys; one runs per participant, see
+    #   "Remote signing for validator clients" below. Needs network kurtosis or a
+    #   shadowfork, parallel_keystore_generation: false and remote_signer_image.
+    #   It replaces clef for this participant: the EL clients get clef only when
+    #   another participant uses it
     # Defaults to clef
     remote_signer_type: "clef"
 
@@ -335,7 +344,9 @@ participants:
     remote_signer_auto_approve: false
 
     # The Docker image that should be used for the remote signer
-    # Defaults to "qrledger/go-qrl:alltools-stable"
+    # Defaults to "qrledger/go-qrl:alltools-stable" for clef
+    # go-remotesigner has no published image, so it has no default and needs this set to an image you build, see
+    # "Remote signing for validator clients" below
     remote_signer_image: "qrledger/go-qrl:alltools-stable"
 
     # A list of optional extra env_vars the remote signer container should spin up with
@@ -346,6 +357,8 @@ participants:
     remote_signer_extra_labels: {}
 
     # A list of optional extra params that will be passed to the remote signer container for modifying its behaviour
+    # For go-remotesigner they follow the consensus command, so they are consensus flags; set its global
+    # flags through remote_signer_extra_env_vars instead, for example REMOTESIGNER_ACCESS_LOGS_ENABLED: "true"
     remote_signer_extra_params: []
 
     # A list of tolerations that will be passed to the remote signer container
@@ -428,6 +441,7 @@ participants:
 
     # Participant flag for keymanager api
     # This will open up http ports to your validator services!
+    # See the global keymanager_enabled for where the qrysm validator client serves the API and keeps its token
     # Defaults null and then set to default global keymanager_enabled (false)
     keymanager_enabled: null
 
@@ -844,6 +858,9 @@ global_node_selectors: {}
 
 # Global parameters for keymanager api
 # This will open up http ports to your validator services!
+# The qrysm validator client serves the API through its gRPC gateway on port 5056 (port ID http-validator). Its bearer
+# token is the auth-token file qrysm writes to its wallet directory: /validator-keys/qrysm/auth-token with local
+# keystores, /root/.qrlvalidators/qrysm-wallet/auth-token with go-remotesigner
 # Defaults to false
 keymanager_enabled: false
 
@@ -953,6 +970,79 @@ qrl_metrics_exporter_enabled: true
 ```
 
 </details>
+
+<details>
+    <summary>A gqrl/qrysm network whose validator client signs through go-remotesigner</summary>
+
+```yaml
+participants:
+  - el_type: gqrl
+    cl_type: qrysm
+    vc_image: <a qrysm validator image with the --validators-external-signer-* flags>
+    use_remote_signer: true
+    remote_signer_type: go-remotesigner
+    remote_signer_image: local/go-remotesigner:devnet
+network_params:
+  light_kdf_enabled: true
+additional_services:
+  - prometheus_grafana
+```
+
+</details>
+
+## Remote signing for validator clients
+
+With `use_remote_signer: true` and `remote_signer_type: go-remotesigner`, each participant's qrysm validator client signs
+every duty through its own [go-remotesigner](https://github.com/rgeraldes24/go-remotesigner), a remote signer for
+QRL's ML-DSA-87 validator keys with the Web3Signer API. The validator client gets no wallet and no keystore.
+
+- **Image.** go-remotesigner has no published image, so `remote_signer_image` has no default and the package refuses
+  to start without it. Build the consensus-only image from go-remotesigner's `m/v1.1-prep` branch (its `main` has only a
+  README until that stack merges) with Go, [go-licenses](https://github.com/google/go-licenses) v2.0.1 and Docker buildx,
+  as its [`docs/operations/deploy-docker.md`](https://github.com/rgeraldes24/go-remotesigner/blob/m/v1.1-prep/docs/operations/deploy-docker.md#8-building-the-image)
+  describes:
+
+  ```bash
+  git clone -b m/v1.1-prep https://github.com/rgeraldes24/go-remotesigner.git && cd go-remotesigner
+  go install github.com/google/go-licenses/v2@v2.0.1
+  make image FLAVOUR=remotesigner-consensus IMAGE=local/go-remotesigner:devnet \
+    GO_LICENSES="$(go env GOPATH)/bin/go-licenses"
+  ```
+
+- **clef.** A participant has one remote signer type, so a participant with go-remotesigner runs no clef. The
+  execution clients get clef (`--signer`) only when another participant has `use_remote_signer: true` with
+  `remote_signer_type: clef`.
+- **Service.** `signer-<participant>`, for example `signer-1-gqrl-qrysm` next to `vc-1-gqrl-qrysm`, labelled
+  `qrl-package.client: go-remotesigner` and `qrl-package.client-type: remote-signer`. The API serves TLS on port 9000
+  (port ID `http`); Prometheus metrics are on port 9001 (`metrics`), scraped by the package's Prometheus. The validator
+  client starts once `/upcheck` answers and `publicKeys` lists exactly its keys.
+- **Keys.** The deposit CLI keystores the package generates for the validator client, with their password file.
+  Slashing protection is on, in the signer's bbolt store under `/data`.
+- **Shared files.** A setup step generates a sign token and a TLS certificate for the service name, `localhost` and
+  `127.0.0.1`, issued by a CA whose key is discarded. The signer mounts its files at `/remote-signer` (`network/`,
+  `keystores/`, `password.txt`, `auth-token`, `tls/`), owned by the image's user. The validator client mounts
+  `/remote-signer/keys.txt` (its public keys, one per line), `/remote-signer/auth-token` and `/remote-signer/ca.pem`,
+  for `--validators-external-signer-key-file`, `--validators-external-signer-auth-token-file` and
+  `--validators-external-signer-tls-ca-file`.
+- **From the host.** The token, key file and CA are in the files artifact `signer-<participant>-vc-files`:
+
+  ```bash
+  kurtosis files download my-testnet signer-1-gqrl-qrysm-vc-files ./signer
+  curl --cacert ./signer/ca.pem -H "Authorization: Bearer $(cat ./signer/auth-token)" \
+    "$(kurtosis port print my-testnet signer-1-gqrl-qrysm http)/api/v1/consensus/publicKeys"
+  ```
+
+- **Validator client image.** It needs qrysm's `--validators-external-signer-*` flags, which no qrysm release has yet.
+- **Remote keys.** With `keymanager_enabled: true`, the validator client serves the keymanager API on port 5056 (port
+  ID `http-validator`), with the remote keys endpoints (`/qrl/v1/remotekeys`), which add keys to and remove them from
+  `/remote-signer/keys.txt`; this needs a qrysm whose validator client serves them. qrysm keeps the API's token in
+  `auth-token` in its wallet directory, which in remote mode is the default one,
+  `/root/.qrlvalidators/qrysm-wallet/auth-token`.
+- **Exits.** The signer refuses `VOLUNTARY_EXIT` requests unless it runs with `--voluntary-exit-signing-enabled`, a
+  consensus flag: `remote_signer_extra_params: ["--voluntary-exit-signing-enabled"]`.
+- **Logging.** The signer logs at the participant's `vc_log_level`, else at `global_log_level` (`--logging`).
+- **RANDAO.** With fewer than 4 x `slots_per_epoch` validators in the network, the package turns off the signer's
+  RANDAO new-layer rate limit (`--randao-new-layer-refill-epochs=0`), which honest proposals would otherwise hit.
 
 ## Custom labels for Docker and Kubernetes
 
