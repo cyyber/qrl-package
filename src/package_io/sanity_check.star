@@ -258,6 +258,7 @@ SUBCATEGORY_PARAMS = {
 REMOTE_SIGNER_TYPES = [
     constants.REMOTE_SIGNER_TYPE.clef,
     constants.REMOTE_SIGNER_TYPE.go_remotesigner,
+    constants.REMOTE_SIGNER_TYPE.go_remotesigner_execution,
 ]
 
 ADDITIONAL_SERVICES_PARAMS = [

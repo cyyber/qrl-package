@@ -1,4 +1,7 @@
 go_remotesigner = import_module("./go_remotesigner/go_remotesigner_launcher.star")
+go_remotesigner_execution = import_module(
+    "./go_remotesigner/go_remotesigner_execution_launcher.star"
+)
 clef = import_module("./clef/clef_launcher.star")
 
 constants = import_module("../package_io/constants.star")
@@ -27,6 +30,7 @@ def launch(
     generator_image=None,
     network_validator_count=0,
     slots_per_epoch=0,
+    el_context=None,
 ):
     plan.print("Launching remote signer")
 
@@ -51,6 +55,14 @@ def launch(
                 slots_per_epoch=slots_per_epoch,
             ),
             "launch_method": go_remotesigner.launch,
+        },
+        constants.REMOTE_SIGNER_TYPE.go_remotesigner_execution: {
+            "launcher": go_remotesigner_execution.new_go_remotesigner_execution_launcher(
+                el_context=el_context,
+                network_id=network_id,
+                generator_image=generator_image,
+            ),
+            "launch_method": go_remotesigner_execution.launch,
         },
     }
 

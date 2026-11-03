@@ -343,11 +343,13 @@ def launch_participant_network(
         )
 
         # clef signs for the execution clients and was launched once, above;
-        # the other remote signers sign for this participant's validator client,
-        # with its keystores
+        # go-remotesigner signs for this participant's validator client, with
+        # its keystores, and in execution mode holds development accounts in
+        # front of this participant's execution client, whose validator client
+        # then keeps its keystores
         if (
             participant.use_remote_signer
-            and remote_signer_type != constants.REMOTE_SIGNER_TYPE.clef
+            and remote_signer_type == constants.REMOTE_SIGNER_TYPE.go_remotesigner
             and vc_keystores != None
         ):
             remote_signer_context = remote_signer.launch(
@@ -376,6 +378,32 @@ def launch_participant_network(
                 network_validator_count=total_number_of_validator_keys,
                 slots_per_epoch=network_params.slots_per_epoch,
             )
+        elif (
+            participant.use_remote_signer
+            and remote_signer_type
+            == constants.REMOTE_SIGNER_TYPE.go_remotesigner_execution
+        ):
+            remote_signer_context = remote_signer.launch(
+                plan=plan,
+                service_name="signer-{0}".format(full_name),
+                remote_signer_type=remote_signer_type,
+                image=participant.remote_signer_image,
+                full_name="{0}-remote_signer".format(full_name),
+                vc_type=vc_type,
+                el_type=el_type,
+                clef_files=None,
+                participant=participant,
+                global_tolerations=global_tolerations,
+                node_selectors=node_selectors,
+                port_publisher=args_with_right_defaults.port_publisher,
+                remote_signer_index=current_vc_index,
+                network_id=network_id,
+                global_log_level=args_with_right_defaults.global_log_level,
+                # It runs only on the kurtosis network and shadowforks, whose
+                # launch returned this image
+                generator_image=qrl_genesis_generator_image,
+                el_context=el_context,
+            )
 
         all_remote_signer_contexts.append(remote_signer_context)
         if remote_signer_context and remote_signer_context.metrics_info:
@@ -390,7 +418,12 @@ def launch_participant_network(
             global_log_level=args_with_right_defaults.global_log_level,
             cl_context=cl_context,
             el_context=el_context,
-            remote_signer_context=remote_signer_context,
+            # Only the consensus signer signs for the validator client
+            remote_signer_context=(
+                remote_signer_context
+                if remote_signer_type == constants.REMOTE_SIGNER_TYPE.go_remotesigner
+                else None
+            ),
             full_name=full_name,
             snooper_enabled=participant.snooper_enabled,
             snooper_beacon_context=snooper_beacon_context,

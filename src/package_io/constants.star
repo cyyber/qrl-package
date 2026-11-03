@@ -13,6 +13,7 @@ VC_TYPE = struct(
 REMOTE_SIGNER_TYPE = struct(
     clef="clef",
     go_remotesigner="go-remotesigner",
+    go_remotesigner_execution="go-remotesigner-execution",
 )
 
 GLOBAL_LOG_LEVEL = struct(

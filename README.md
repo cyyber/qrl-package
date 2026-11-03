@@ -323,7 +323,7 @@ participants:
 
   # Remote signer Specific flags
     # The type of remote signer that should be used
-    # Valid values are clef, go-remotesigner
+    # Valid values are clef, go-remotesigner, go-remotesigner-execution
     # - clef holds development accounts for the EL clients; one clef runs for the
     #   first participant that uses it
     # - go-remotesigner signs every duty of this participant's validator client,
@@ -332,6 +332,12 @@ participants:
     #   shadowfork, parallel_keystore_generation: false and remote_signer_image.
     #   It replaces clef for this participant: the EL clients get clef only when
     #   another participant uses it
+    # - go-remotesigner-execution is go-remotesigner's execution mode: it holds
+    #   development accounts in front of this participant's gqrl JSON-RPC, and the
+    #   validator client keeps its keystores; one runs per participant, see
+    #   "Remote signing for execution clients" below. Needs network kurtosis or a
+    #   shadowfork and remote_signer_image. It replaces clef for this participant
+    #   as go-remotesigner does
     # Defaults to clef
     remote_signer_type: "clef"
 
@@ -346,7 +352,8 @@ participants:
     # The Docker image that should be used for the remote signer
     # Defaults to "qrledger/go-qrl:alltools-stable" for clef
     # go-remotesigner has no published image, so it has no default and needs this set to an image you build, see
-    # "Remote signing for validator clients" below
+    # "Remote signing for validator clients" below, and for go-remotesigner-execution "Remote signing for
+    # execution clients"
     remote_signer_image: "qrledger/go-qrl:alltools-stable"
 
     # A list of optional extra env_vars the remote signer container should spin up with
@@ -357,7 +364,8 @@ participants:
     remote_signer_extra_labels: {}
 
     # A list of optional extra params that will be passed to the remote signer container for modifying its behaviour
-    # For go-remotesigner they follow the consensus command, so they are consensus flags; set its global
+    # For go-remotesigner they follow the consensus command, so they are consensus flags, and for
+    # go-remotesigner-execution the execution command, so they are execution flags; set its global
     # flags through remote_signer_extra_env_vars instead, for example REMOTESIGNER_ACCESS_LOGS_ENABLED: "true"
     remote_signer_extra_params: []
 
@@ -1043,6 +1051,64 @@ QRL's ML-DSA-87 validator keys with the Web3Signer API. The validator client get
 - **Logging.** The signer logs at the participant's `vc_log_level`, else at `global_log_level` (`--logging`).
 - **RANDAO.** With fewer than 4 x `slots_per_epoch` validators in the network, the package turns off the signer's
   RANDAO new-layer rate limit (`--randao-new-layer-refill-epochs=0`), which honest proposals would otherwise hit.
+
+## Remote signing for execution clients
+
+With `use_remote_signer: true` and `remote_signer_type: go-remotesigner-execution`, each participant's gqrl gets a
+[go-remotesigner](https://github.com/rgeraldes24/go-remotesigner) in front of its JSON-RPC, in execution mode
+(`remotesigner execution`, a port of Web3Signer's `eth1` mode; its `docs/operations/execution.md` describes it). The
+signer holds development accounts: it answers `qrl_accounts`, signs with `qrl_sign` and `qrl_signTransaction`, signs
+and sends a transaction through gqrl with `qrl_sendTransaction`, and forwards the methods its allowlist allows to gqrl.
+gqrl itself is unchanged and holds no keys; the validator client keeps its keystores.
+
+```yaml
+participants:
+  - el_type: gqrl
+    cl_type: qrysm
+    use_remote_signer: true
+    remote_signer_type: go-remotesigner-execution
+    remote_signer_image: local/go-remotesigner:devnet-full
+```
+
+- **Image.** Only the full flavour of go-remotesigner, `remotesigner`, has execution mode; the consensus-only image
+  refuses the command. Build it as the consensus image, with `FLAVOUR=remotesigner`:
+
+  ```bash
+  make image FLAVOUR=remotesigner IMAGE=local/go-remotesigner:devnet-full \
+    GO_LICENSES="$(go env GOPATH)/bin/go-licenses"
+  ```
+
+  It links go-qrl, which is LGPL-3.0-or-later, so it is an LGPL combined work.
+- **Accounts.** The prefunded development accounts 8 to 11 (`PRE_FUNDED_ACCOUNTS` in
+  `src/prelaunch_data_generator/genesis_constants/genesis_constants.star`), each as a `file-raw` key-config document of
+  its extended seed. Neither clef nor the package's other users of the prefunded accounts sign for them. Every
+  participant with an execution signer holds the same four, so their signers share the accounts' nonces.
+- **Service.** `signer-<participant>`, for example `signer-1-gqrl-qrysm` next to `el-1-gqrl-qrysm`, labelled
+  `qrl-package.client: go-remotesigner-execution`, `qrl-package.client-type: remote-signer` and
+  `qrl-package.connected-client: gqrl`. The JSON-RPC endpoint is `POST /` on port 9000 (port ID `http`), over TLS with
+  the sign token as a bearer token; Prometheus metrics are on port 9001 (`metrics`). The package waits until
+  `/upcheck` answers, `/api/v1/execution/publicKeys` lists exactly the accounts, and `qrl_chainId`, which the signer
+  forwards, answers with the network ID.
+- **Signing.** `--chain-id` is the network ID: a transaction for another chain is refused. A listener beyond loopback
+  needs a policy file; the package's lets every account sign what it could sign without one, any transaction,
+  contract creations included, whose fee (gas x maxFeePerGas) is at most the signer's default cap of 1 quanta. The
+  signer records what it signed, sent and refused in `/data/audit.jsonl`.
+- **Forwarding.** To gqrl's HTTP JSON-RPC, by its IP address. The signer's default allowlist, `qrl_*,net_*,web3_*`,
+  forwards the chain, network and client namespaces and refuses the others, `admin_*`, `debug_*` and `personal_*`
+  among them, which gqrl serves on its own port.
+- **Shared files.** A setup step generates a sign token and a TLS certificate for the service name, `localhost` and
+  `127.0.0.1`, issued by a CA whose key is discarded. The signer mounts its files at `/remote-signer` (`keys/`,
+  `policy.yaml`, `auth-token`, `ca.pem`, `tls/`), owned by the image's user. A client finds the token, the CA and the
+  accounts' addresses (`accounts.txt`) in the files artifact `signer-<participant>-client-files`:
+
+  ```bash
+  kurtosis files download my-testnet signer-1-gqrl-qrysm-client-files ./signer
+  curl --cacert ./signer/ca.pem -H "Authorization: Bearer $(cat ./signer/auth-token)" \
+    -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"qrl_accounts"}' \
+    "$(kurtosis port print my-testnet signer-1-gqrl-qrysm http)/"
+  ```
+
+- **Logging.** The signer logs at the participant's `el_log_level`, else at `global_log_level` (`--logging`).
 
 ## Custom labels for Docker and Kubernetes
 
