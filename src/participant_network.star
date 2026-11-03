@@ -33,7 +33,6 @@ def launch_participant_network(
     args_with_right_defaults,
     network_params,
     jwt_file,
-    keymanager_file,
     persistent,
     xatu_sentry_params,
     global_tolerations,
@@ -185,7 +184,6 @@ def launch_participant_network(
         network_params,
         el_cl_data,
         jwt_file,
-        keymanager_file,
         args_with_right_defaults,
         all_el_contexts,
         global_node_selectors,
@@ -386,7 +384,6 @@ def launch_participant_network(
         vc_context = vc.launch(
             plan=plan,
             launcher=vc.new_vc_launcher(el_cl_genesis_data=el_cl_data),
-            keymanager_file=keymanager_file,
             service_name="vc-{0}".format(full_name),
             vc_type=vc_type,
             image=participant.vc_image,

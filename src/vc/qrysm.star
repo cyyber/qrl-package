@@ -10,7 +10,6 @@ QRYSM_BEACON_RPC_PORT = 4000
 def get_config(
     participant,
     el_cl_genesis_data,
-    keymanager_file,
     image,
     beacon_http_url,
     cl_context,
