@@ -191,22 +191,9 @@ def prepare_files(plan, launcher, service_name, validator_count):
                 signer_keystores, vc_key_file
             ),
             'test "$(wc -l < {0})" -eq {1}'.format(vc_key_file, validator_count),
-            "openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days 3650 -subj '/CN={0} CA' -addext basicConstraints=critical,CA:TRUE -addext keyUsage=critical,keyCertSign -keyout /tmp/ca-key.pem -out {1}".format(
-                service_name, vc_ca
-            ),
-            "openssl req -new -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -subj '/CN={0}' -keyout {1} -out /tmp/signer.csr".format(
-                service_name, signer_key
-            ),
-            # Clients on the host reach the published port on the loopback address
-            "printf 'basicConstraints=critical,CA:FALSE\\nkeyUsage=critical,digitalSignature\\nextendedKeyUsage=serverAuth\\nsubjectAltName=DNS:{0},DNS:localhost,IP:127.0.0.1\\n' > /tmp/signer.ext".format(
-                service_name
-            ),
-            "openssl x509 -req -in /tmp/signer.csr -CA {0} -CAkey /tmp/ca-key.pem -set_serial 0x$(openssl rand -hex 16) -days 3650 -extfile /tmp/signer.ext -out {1}".format(
-                vc_ca, signer_cert
-            ),
-            "openssl verify -CAfile {0} -verify_hostname {1} {2}".format(
-                vc_ca, service_name, signer_cert
-            ),
+        ]
+        + tls_commands(service_name, vc_ca, signer_cert, signer_key)
+        + [
             "chown -R {0} {1}".format(GO_REMOTESIGNER_USER, signer),
             "chmod 0700 {0} {1} {2}".format(
                 signer, signer_keystores, shared_utils.path_dir(signer_cert)
@@ -241,6 +228,31 @@ def prepare_files(plan, launcher, service_name, validator_count):
     )
 
     return result.files_artifacts[0], result.files_artifacts[1]
+
+
+# The commands that issue the signer's TLS certificate for the service name,
+# localhost and 127.0.0.1, from a new CA whose certificate they write to
+# ca_filepath. The CA key stays in /tmp of the step that runs them, which the
+# step does not store.
+def tls_commands(service_name, ca_filepath, cert_filepath, key_filepath):
+    return [
+        "openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days 3650 -subj '/CN={0} CA' -addext basicConstraints=critical,CA:TRUE -addext keyUsage=critical,keyCertSign -keyout /tmp/ca-key.pem -out {1}".format(
+            service_name, ca_filepath
+        ),
+        "openssl req -new -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -subj '/CN={0}' -keyout {1} -out /tmp/signer.csr".format(
+            service_name, key_filepath
+        ),
+        # Clients on the host reach the published port on the loopback address
+        "printf 'basicConstraints=critical,CA:FALSE\\nkeyUsage=critical,digitalSignature\\nextendedKeyUsage=serverAuth\\nsubjectAltName=DNS:{0},DNS:localhost,IP:127.0.0.1\\n' > /tmp/signer.ext".format(
+            service_name
+        ),
+        "openssl x509 -req -in /tmp/signer.csr -CA {0} -CAkey /tmp/ca-key.pem -set_serial 0x$(openssl rand -hex 16) -days 3650 -extfile /tmp/signer.ext -out {1}".format(
+            ca_filepath, cert_filepath
+        ),
+        "openssl verify -CAfile {0} -verify_hostname {1} {2}".format(
+            ca_filepath, service_name, cert_filepath
+        ),
+    ]
 
 
 # The API serves TLS only, which Kurtosis ready conditions do not speak, so a
@@ -370,31 +382,13 @@ def get_config(
         GO_REMOTESIGNER_FILES_MOUNTPOINT: signer_files_artifact_uuid,
     }
 
-    public_ports = {}
-    if port_publisher.remote_signer_enabled:
-        public_ports_for_component = shared_utils.get_public_ports_for_component(
-            "remote-signer", port_publisher, remote_signer_index
-        )
-        public_ports = {
-            GO_REMOTESIGNER_HTTP_PORT_ID: shared_utils.new_port_spec(
-                public_ports_for_component[0],
-                shared_utils.TCP_PROTOCOL,
-                shared_utils.HTTPS_APPLICATION_PROTOCOL,
-            ),
-            GO_REMOTESIGNER_METRICS_PORT_ID: shared_utils.new_port_spec(
-                public_ports_for_component[1],
-                shared_utils.TCP_PROTOCOL,
-                shared_utils.HTTP_APPLICATION_PROTOCOL,
-            ),
-        }
-
     ports = {}
     ports.update(GO_REMOTESIGNER_USED_PORTS)
 
     config_args = {
         "image": image,
         "ports": ports,
-        "public_ports": public_ports,
+        "public_ports": get_public_ports(port_publisher, remote_signer_index),
         "cmd": cmd,
         "files": files,
         "env_vars": participant.remote_signer_extra_env_vars,
@@ -420,6 +414,28 @@ def get_config(
         config_args["max_memory"] = participant.remote_signer_max_mem
 
     return ServiceConfig(**config_args)
+
+
+# The host ports the API and the metrics listener are published on, when the
+# port publisher publishes the remote signers'
+def get_public_ports(port_publisher, remote_signer_index):
+    if not port_publisher.remote_signer_enabled:
+        return {}
+    public_ports_for_component = shared_utils.get_public_ports_for_component(
+        "remote-signer", port_publisher, remote_signer_index
+    )
+    return {
+        GO_REMOTESIGNER_HTTP_PORT_ID: shared_utils.new_port_spec(
+            public_ports_for_component[0],
+            shared_utils.TCP_PROTOCOL,
+            shared_utils.HTTPS_APPLICATION_PROTOCOL,
+        ),
+        GO_REMOTESIGNER_METRICS_PORT_ID: shared_utils.new_port_spec(
+            public_ports_for_component[1],
+            shared_utils.TCP_PROTOCOL,
+            shared_utils.HTTP_APPLICATION_PROTOCOL,
+        ),
+    }
 
 
 def new_go_remotesigner_launcher(
